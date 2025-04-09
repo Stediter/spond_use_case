@@ -1,0 +1,11 @@
+parameters:
+  - name: pythonVersion # name of the parameter; required
+    type: string # data type of the parameter; required
+    default: false
+ 
+steps:
+  # Set python environment
+  - task: UsePythonVersion@0
+    displayName: "Pre-job: Use Python ${{ parameters.pythonVersion }}"
+    inputs:
+      versionSpec: ${{ parameters.pythonVersion }}

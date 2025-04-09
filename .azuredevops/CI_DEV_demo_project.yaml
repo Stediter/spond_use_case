@@ -1,0 +1,27 @@
+name: test.pipeline_$(SourceBranchName)_$(date:yyyyMMdd)$(rev:.r)
+ 
+parameters:
+  - name: branchForPipelineRef
+    type: string
+    default: dev
+ 
+resources:
+  repositories:
+    - repository: test_repository
+      type: git
+      name: databricks_demo/use_case
+      ref: refs/heads/${{ parameters.branchForPipelineRef }}
+ 
+trigger:
+  branches:
+    include:
+      - "*"
+    exclude:
+      - master
+ 
+pool:
+  vmImage: ubuntu-latest
+ 
+ 
+extends:
+  template: .azuredevops/templates/pipelines/CI-DEV.yaml@test_repository

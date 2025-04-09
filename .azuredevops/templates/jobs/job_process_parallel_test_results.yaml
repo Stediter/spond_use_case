@@ -1,0 +1,50 @@
+parameters:
+  - name: parallel_tests
+    type: number
+  - name: upload_test_results
+    type: boolean
+    default: False
+  - name: update_az_test_plan
+    type: boolean
+    default: False
+  - name: upload_coverage
+    type: boolean
+    default: False
+  - name: check_duplicate_tests
+    type: boolean
+    default: False
+ 
+jobs:
+  - job: UnitTestReporting
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    #condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/develop'), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
+    variables:
+      - template: ../vars/vars-global.yaml
+    dependsOn:
+      - UnitTesting
+    steps:
+      # - checkout: CICD_templates
+      # Install some tools needed for build (pylint, flake8, etc)
+      - template: ../steps/step_install_python_packages.yaml
+        parameters:
+          workingDir: ${{ variables.mainWorkingDirectory }}
+          useCache: ${{ variables.useCache }}
+          requirements_path: ${{ variables.mainWorkingDirectory }}/${{ variables.requirements_path }}
+      - download: current
+        displayName: download artifacts
+        patterns: "**/*testreport.xml"
+      - task: PublishTestResults@2
+        displayName: "Post-job: Upload test results"
+        condition: ${{ parameters.upload_test_results }}
+        inputs:
+          testResultsFormat: "NUnit"
+          testResultsFiles: "**/testreport.xml"
+          mergeTestResults: true
+          testRunTitle: testreport
+          searchFolder: "$(Pipeline.Workspace)"
+      - task: PublishCodeCoverageResults@2
+        displayName: "Post-job: Publish coverage results"
+        condition: ${{ parameters.upload_coverage }}
+        inputs:
+          codeCoverageTool: Cobertura
+          summaryFileLocation: "$(Pipeline.Workspace)/**/cov-testreport.xml"

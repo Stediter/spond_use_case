@@ -1,0 +1,15 @@
+stages:
+  - stage: "DEV"
+    condition: and(not(failed()), not(canceled()))
+    jobs:
+      - template: ../jobs/job_clean_code_check.yaml
+      - template: ../jobs/job_feature_test.yaml
+        parameters:
+          env: dev
+      - template: ../jobs/job_process_parallel_test_results.yaml
+        parameters:
+          parallel_tests: 1
+          upload_test_results: True
+          update_az_test_plan: False
+          upload_coverage: False
+          check_duplicate_tests: True

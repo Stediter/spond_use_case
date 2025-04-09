@@ -1,0 +1,21 @@
+
+jobs:
+  - job: CleanCodeCheck
+    variables:
+      - template: ../vars/vars-global.yaml
+    steps:
+      # Set python environment
+      - template: ../steps/step_use_python_version.yaml
+        parameters:
+          pythonVersion: ${{ variables.pythonVersion }}
+      # Install some tools needed for build (pylint, flake8, etc)
+      - template: ../steps/step_install_python_packages.yaml
+        parameters:
+          workingDir: ${{ variables.mainWorkingDirectory }}
+          useCache: ${{ variables.useCache }}
+          requirements_path: ${{ variables.mainWorkingDirectory }}/${{ variables.requirements_path }}
+      # Linting: pylint and black
+      - bash: |
+          source venv/bin/activate
+          make workingDirectory=${{ variables.mainWorkingDirectory }} lint -C ${{ variables.mainWorkingDirectory }}/.azuredevops/templates/utilities
+        displayName: "QA: Code Style (pylint & black)"

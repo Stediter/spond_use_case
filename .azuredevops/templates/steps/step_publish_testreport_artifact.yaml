@@ -1,0 +1,12 @@
+parameters:
+  - name: source
+    type: string
+  - name: dest
+    type: string
+ 
+steps:
+  - publish: ${{ parameters.source }}
+    condition: succeededOrFailed()
+    artifact: ${{ parameters.dest }}
+    displayName: "Post-job: publish artifact"
+ 

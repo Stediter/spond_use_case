@@ -1,5 +1,6 @@
-# spond_use_case
+# Spond USe Case
 
+## Repo Content
 This repo contains several folders:
 - Notebooks (.py file format for better readability in azure devops/github): divided in DDL (creation statements) and DML (ETL processes); considered the number of objects at the moment no further subfolders for medallion layer have been added, of course in a real case scenario the hierarchy could be expanded as desided.
 - Modules: some sample modules with functions. Usually my approach is to write functions as much parametrized as possible and divide them by functionality (read, write, transform, connect to external tools..). At the moment some parts of the logic are still in the notebooks due to time constraints, I usually try to put everything in modules for better test coverage with Pytest.

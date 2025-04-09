@@ -1,0 +1,32 @@
+parameters:
+  - name: requirements_path
+    type: string
+  - name: workingDir
+    type: string
+    default: .
+  - name: useCache
+    type: boolean
+    default: false
+ 
+steps:
+  - task: Cache@2
+    inputs:
+      key: version7 | env | $(Agent.OS) | ${{ parameters.requirements_path }}
+      path: ${{ parameters.workingDir }}/venv
+      cacheHitVar: CACHE_RESTORED
+    displayName: Retrieve cached dependencies and env
+    condition: ${{ parameters.useCache }}
+  - bash: |
+      python -m venv venv
+      source venv/bin/activate
+      sudo apt-get install build-essential
+      pip install -r ${{ parameters.requirements_path }} -U --upgrade-strategy eager
+    condition: ne(variables.CACHE_RESTORED, 'true')
+    displayName: "Pre-job: Install python packages for build using pip"
+    workingDirectory: ${{ parameters.workingDir }}
+  - bash:
+      source venv/bin/activate
+      cd venv/bin/ && curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+    displayName: "Pre-job: Install new Databricks CLI for build through bash script"
+    workingDirectory: ${{ parameters.workingDir }}
+

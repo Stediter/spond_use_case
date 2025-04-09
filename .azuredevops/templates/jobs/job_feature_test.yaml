@@ -1,0 +1,55 @@
+parameters:
+  - name: env
+    type: string
+    default: dev
+
+jobs:
+  - job: UnitTesting
+    timeoutInMinutes: 120
+    variables:
+      - template: ../vars/vars-global.yaml
+    condition: and(eq(variables['Build.Reason'], 'PullRequest'),and( not(failed()), not(canceled())))
+    # Condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/develop'), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
+    steps:
+      - template: ../steps/step_use_python_version.yaml
+        parameters:
+          pythonVersion: ${{ variables.pythonVersion }}
+      # Install some tools needed for build (pylint, flake8, etc)
+      - template: ../steps/step_install_python_packages.yaml
+        parameters:
+          workingDir: ${{ variables.mainWorkingDirectory }}
+          useCache: ${{ variables.useCache }}
+          requirements_path: ${{ variables.mainWorkingDirectory }}/${{ variables.requirements_path }}
+      - bash: |
+          source venv/bin/activate
+          databricks configure
+        env:
+          DATABRICKS_HOST: ${{ variables.databricksAddress }}
+          DATABRICKS_TOKEN: ${{ variables.databricksToken }}
+      - bash: |
+          source venv/bin/activate
+          databricks-connect test
+        env:
+          DATABRICKS_HOST: ${{ variables.databricksAddress }}
+          DATABRICKS_TOKEN: ${{ variables.databricksToken }}
+          DATABRICKS_CLUSTER_ID: ${{ variables.databricksClusterID }}
+          DATABRICKS_ORG_ID: ${{ variables.databricksOrgID }}
+          DATABRICKS_PORT: ${{ variables.databricksPort }}
+      - bash: |
+          source venv/bin/activate
+          cp -R ${{ variables.mainWorkingDirectory }}/.azuredevops/templates/utilities/pytest.ini ${{ variables.mainWorkingDirectory }}/pytest.ini
+          cp -R ${{ variables.mainWorkingDirectory }}/.azuredevops/templates/utilities/conftest.py ${{ variables.mainWorkingDirectory }}/tests/conftest.py
+          PYTHONPATH=. pytest -s --durations=10 -vv -n auto tests/ --doctest-modules --nunit-xml=testreport.xml
+        displayName: "Unit test execution"
+        workingDirectory: ${{ variables.mainWorkingDirectory }}
+        env:
+          DATABRICKS_HOST: ${{ variables.databricksAddress }}
+          DATABRICKS_TOKEN: ${{ variables.databricksToken }}
+          DATABRICKS_CLUSTER_ID: ${{ variables.databricksClusterID }}
+          DATABRICKS_ORG_ID: ${{ variables.databricksOrgID }}
+          DATABRICKS_PORT: ${{ variables.databricksPort }}
+          PYARROW_IGNORE_TIMEZONE: 1
+      - template: ../steps/step_publish_testreport_artifact.yaml
+        parameters:
+          source: ${{ variables.mainWorkingDirectory }}/testreport.xml
+          dest: testreport_1
