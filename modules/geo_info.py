@@ -23,19 +23,19 @@ get_county_and_state_udf = udf(get_county_and_state,
                                StructType([StructField('county', StringType(), True),
                                            StructField('state', StringType(), True)]))
 
-def enrich_geography_by_coordinates(inputs_df: DataFrame, use_api:bool) -> DataFrame:
+def enrich_geography_by_coordinates(input_df: DataFrame, use_api:bool) -> DataFrame:
     """
     Enriches a DataFrame with county and state information based on latitude and longitude.
 
     Args:
-    inputs_df (DataFrame): Input DataFrame containing 'latitude' and 'longitude' columns.
+    input_df (DataFrame): Input DataFrame containing 'latitude' and 'longitude' columns.
 
     Returns:
     DataFrame: DataFrame enriched with 'county' and 'state' columns.
     """
     if use_api:
-        to_be_enriched_df = inputs_df.where("latitude is not null")
-        skip_df = inputs_df.where("latitude is  null")
+        to_be_enriched_df = input_df.where("latitude is not null")
+        skip_df = input_df.where("latitude is  null")
 
         to_be_enriched_df = to_be_enriched_df\
             .withColumn( "coordinates", concat(col("latitude"), lit(","), col("longitude")))\
@@ -53,7 +53,7 @@ def enrich_geography_by_coordinates(inputs_df: DataFrame, use_api:bool) -> DataF
     else:
         input_df = input_df\
             .withColumn("county", lit("Oslo county"))\
-            .withCOlumn("state", lit("Norway"))
+            .withColumn("state", lit("Norway"))
             
         return input_df
     

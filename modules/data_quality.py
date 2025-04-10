@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, concat, lit, to_timestamp
 
-#For all this test, with more time at my disposal I would have liked to explore DBX, a new framework from databricks which enables in a systematic way data quality control to a df splitting in a similar way to what I did manually
+# For all this test, with more time at my disposal I would have liked to explore DBX, a new framework from databricks which enables in a systematic way data quality control to a df splitting in a similar way to what I did manually
 
 def check_data_quality_id(input_df:DataFrame, id_column:str) -> (DataFrame, DataFrame):
     """
@@ -84,7 +84,17 @@ def check_data_quality_timestamps(input_df:DataFrame, input_column_list:list, id
 
 
 def check_data_quality_teams_table(input_df):
-
+    """
+    Checks the data quality of the teams table in the input DataFrame.
+    
+    Parameters:
+    input_df (DataFrame): The input DataFrame to check.
+    
+    Returns:
+    tuple: A tuple containing two DataFrames:
+        - The first DataFrame contains rows with valid team data.
+        - The second DataFrame contains rows with invalid team data.
+    """
     bad_country_code_df = input_df.where("country_code IS NULL")
     input_df = input_df.where("country_code IS NOT NULL")
 
@@ -111,9 +121,57 @@ def check_data_quality_events_table(input_df:DataFrame) -> (DataFrame, DataFrame
     bad_consecutio_df = input_df.where("event_start > event_end")
     input_df = input_df.where("event_start < event_end")
 
-    bad_coordinates_df = input_df.where("(longitude is null and latitude is not null) OR (longitude is not null and latitude is null)")
+    bad_coordinates_df = input_df.where("(longitude is null and latitude is not null) OR (longitude is not null and latitude is null) OR longitude > 180 or longitude < -180 or latitude > 90 or latitude < -90")
     input_df = input_df.where("(longitude is null and latitude is null) OR (longitude is not null and latitude is not null)")
 
     bad_formed_df = bad_consecutio_df.union(bad_coordinates_df)
+
+    return input_df, bad_formed_df
+
+
+def check_data_quality_memberships_table(input_df:DataFrame) -> (DataFrame, DataFrame):
+    """
+    Checks the data quality of the memberships table in the input DataFrame.
+    
+    Parameters:
+    input_df (DataFrame): The input DataFrame to check.
+    
+    Returns:
+    tuple: A tuple containing two DataFrames:
+        - The first DataFrame contains rows with valid membership data.
+        - The second DataFrame contains rows with invalid membership data.
+    """
+    wrong_role_df = input_df.where("role_title NOT IN ('member','admin')")
+    input__df = input_df.where("role_title IN ('member','admin')")
+
+    return input_df, wrong_role_df
+
+
+def check_data_quality_events_rsvps_table(input_df:DataFrame,input_memberships_df:DataFrame, input_events_df:DataFrame) -> (DataFrame, DataFrame):
+    """
+    Checks the data quality of the events RSVPs table in the input DataFrame.
+    
+    Parameters:
+    input_df (DataFrame): The input DataFrame to check.
+    input_memberships_df (DataFrame): The DataFrame containing membership data.
+    input_events_df (DataFrame): The DataFrame containing event data.
+    
+    Returns:
+    tuple: A tuple containing two DataFrames:
+        - The first DataFrame contains rows with valid RSVPs.
+        - The second DataFrame contains rows with invalid RSVPs.
+    """
+    bad_response_df = input_df.where("rsvp_status < 0 OR rsvp_status >3")
+    input_df = input_df.where("rsvp_status >= 0 AND rsvp_status <= 3")
+
+    #This check does not consider the history of the event and membership table at the moment, that would require a more sofisticated control using join conditions for not only current tables but full history, not enough time for that
+    input_memberships_df = input_memberships_df.withColumnRenamed("group_id","team_id")
+    members_allowed_to_respond_to_events_df = input_memberships_df.join(input_events_df, how="inner", on="team_id").select("event_id","membership_id")
+
+    rspvs_from_not_members = input_df.join(members_allowed_to_respond_to_events_df, how="left_anti",on=["event_id","membership_id"])
+    input_df = input_df.join(members_allowed_to_respond_to_events_df, how="inner",on=["event_id","membership_id"])
+    rspvs_from_not_members.schema
+
+    bad_formed_df =  bad_response_df.union(rspvs_from_not_members)
 
     return input_df, bad_formed_df
