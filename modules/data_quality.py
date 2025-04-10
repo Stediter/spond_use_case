@@ -1,6 +1,8 @@
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, concat, lit, to_timestamp
 
+#For all this test, with more time at my disposal I would have liked to explore DBX, a new framework from databricks which enables in a systematic way data quality control to a df splitting in a similar way to what I did manually
+
 def check_data_quality_id(input_df:DataFrame, id_column:str) -> (DataFrame, DataFrame):
     """
     Checks the data quality of the ID column in the input DataFrame.
@@ -75,9 +77,23 @@ def check_data_quality_timestamps(input_df:DataFrame, input_column_list:list, id
     input_df = input_df.join(bad_timestamp_df, how="left_anti", on=id_column)
     for column in input_column_list:
         input_df = input_df.drop(column)
+        bad_timestamp_df = bad_timestamp_df.drop(column + "_check")
         input_df = input_df.withColumnRenamed(column + "_check", column)
 
     return input_df, bad_timestamp_df
+
+
+def check_data_quality_teams_table(input_df):
+
+    bad_country_code_df = input_df.where("country_code IS NULL")
+    input_df = input_df.where("country_code IS NOT NULL")
+
+    bad_activity_df = input_df.where("team_activity IS NULL")
+    input_df = input_df.where("team_activity IS NOT NULL")  
+
+    bad_formed_df = bad_country_code_df.union(bad_activity_df)
+
+    return input_df, bad_formed_df
 
 
 def check_data_quality_events_table(input_df:DataFrame) -> (DataFrame, DataFrame):
