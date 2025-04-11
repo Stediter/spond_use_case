@@ -1,0 +1,37 @@
+resources:
+  jobs:
+    Silver_Refresh:
+      name: Silver Refresh
+      tasks:
+        - task_key: teams
+          notebook_task:
+            notebook_path: /Repos/Use Case/spond_use_case/notebooks/DML/teams_silver
+            source: WORKSPACE
+          existing_cluster_id: 0408-115705-5ln1ruhq
+        - task_key: events
+          depends_on:
+            - task_key: teams
+          notebook_task:
+            notebook_path: /Repos/Use Case/spond_use_case/notebooks/DML/events_silver
+            source: WORKSPACE
+          existing_cluster_id: 0408-115705-5ln1ruhq
+        - task_key: memberships
+          depends_on:
+            - task_key: teams
+          notebook_task:
+            notebook_path: /Repos/Use Case/spond_use_case/notebooks/DML/memberships_silver
+            source: WORKSPACE
+          existing_cluster_id: 0408-115705-5ln1ruhq
+        - task_key: events_rsvps
+          depends_on:
+            - task_key: events
+            - task_key: memberships
+          notebook_task:
+            notebook_path: /Repos/Use Case/spond_use_case/notebooks/DML/event_rsvps_silver
+            source: WORKSPACE
+          existing_cluster_id: 0408-115705-5ln1ruhq
+      queue:
+        enabled: true
+      parameters:
+        - name: env
+          default: dev

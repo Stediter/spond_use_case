@@ -20,13 +20,15 @@ def check_data_quality_id(input_df:DataFrame, id_column:str) -> (DataFrame, Data
     input_df = input_df.where(f"{id_column} IS NOT NULL")
 
     if input_df.count() != input_df.select(id_column).distinct().count():
-        duplicated_id_df = input_df.join(input_df.select(id_column).distinct(), on=id_column, how="left_anti")
-        input_df = input_df.join(input_df.select(id_column).distinct(), on=id_column, how="inner")
+        duplicated_ids_df = input_df.groupBy(id_column).count().where("count>1").select(id_column)
+        good_df= input_df.join(duplicated_ids_df, on=id_column, how="left_anti")
+        duplicated_id_df = input_df.join(duplicated_ids_df, on=id_column, how="inner")
         bad_id_df = duplicated_id_df.union(null_id_df)
     else:
         bad_id_df = null_id_df
+        good_df = input_df
 
-    return input_df, bad_id_df
+    return good_df, bad_id_df
 
 
 def check_data_quality_foreign_keys(input_df:DataFrame,check_list:list) -> (DataFrame,DataFrame):
