@@ -21,13 +21,15 @@ For the creation of the next layer in the medallion architecture (gold layer), I
 
 ## Possible improvements and limitation due to time costraint
 
-- DBX for data quality applied programmatica
-- Dedicated geographical library installed to avoid API call (struggled 30 minutes with mesa package, apparently is bugged at the moment, desisted, run a few test with a API tool to give an example)
-- Full unit testing
+- Creation of sample gold layer
+- DBX for data quality applied in a systematic way
+- Dedicated geographical library installed to avoid API call (struggled 30 minutes with mesa package, apparently is bugged at the moment, desisted as it had alreafy taken too much time ). In the current code I just harcode Oslo and Norway as county/country, there is the option to change a parameter in the fucntion calling in order to use a geo API to extract full info from latitude and longitude. If run using the API call with the full dataframe it will fail due to timeout issues, that is not the approach I would use in production.
+- Full unit testing (just given a sample to show the framework)
 - Adding integration testing after the full refresh has run
-- Lakehouse federation for PostGre SQL
-- DAB files for actual deploy between enviroments
-- User of service principal in the pipeline
+- Improving workflow definition with libraries, parameters, notifications
+- Lakehouse federation for PostGre SQL ingestion/sync
+- DAB files for actual deployment between environments
+- User of service principal in the devops pipeline
 - Test DLT (would really like this one, it is super good for performance, data quality and moneywise)
 
 
