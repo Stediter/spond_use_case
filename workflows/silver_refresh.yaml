@@ -7,21 +7,21 @@ resources:
           notebook_task:
             notebook_path: /Repos/Use Case/spond_use_case/notebooks/DML/teams_silver
             source: WORKSPACE
-          existing_cluster_id: 0408-115705-5ln1ruhq
+          job_cluster_key: Job_cluster
         - task_key: events
           depends_on:
             - task_key: teams
           notebook_task:
             notebook_path: /Repos/Use Case/spond_use_case/notebooks/DML/events_silver
             source: WORKSPACE
-          existing_cluster_id: 0408-115705-5ln1ruhq
+          job_cluster_key: Job_cluster
         - task_key: memberships
           depends_on:
             - task_key: teams
           notebook_task:
             notebook_path: /Repos/Use Case/spond_use_case/notebooks/DML/memberships_silver
             source: WORKSPACE
-          existing_cluster_id: 0408-115705-5ln1ruhq
+          job_cluster_key: Job_cluster
         - task_key: events_rsvps
           depends_on:
             - task_key: events
@@ -29,7 +29,22 @@ resources:
           notebook_task:
             notebook_path: /Repos/Use Case/spond_use_case/notebooks/DML/event_rsvps_silver
             source: WORKSPACE
-          existing_cluster_id: 0408-115705-5ln1ruhq
+          job_cluster_key: Job_cluster
+      job_clusters:
+        - job_cluster_key: Job_cluster
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            azure_attributes:
+              first_on_demand: 1
+              availability: SPOT_WITH_FALLBACK_AZURE
+              spot_bid_max_price: -1
+            node_type_id: Standard_D4ds_v5
+            spark_env_vars:
+              PYSPARK_PYTHON: /databricks/python3/bin/python3
+            enable_elastic_disk: true
+            data_security_mode: LEGACY_SINGLE_USER_STANDARD
+            runtime_engine: PHOTON
+            num_workers: 8
       queue:
         enabled: true
       parameters:
