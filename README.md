@@ -7,6 +7,7 @@ This repo contains several folders:
 - Tests: a sample unit test for one of functions contained in modules; this test are written using Pytest framework; the reason is that, using azure devops/github actions it is possible in a relatively easy way to develop tests for pyspark in databricks, execute them on a external agent with the help of databricks connect package (see devops point)
 - Utilities: it contains a base notebook to help developing and executing unit test on databricks.
 - Devops: I have mainly Azure Devops expertise, so for the sake of speed I wrote a basic devops pipeline to execute and show unit tests results. The same result can be achieved (with bit more of time for research) using GitHub actions. If you want to see it actually runnning  I can show it working on a sample repo during a call; the pipeline uses currently Devops PAT authentication, but creating a technical user it is possible to convert it to OAUTH2 authentication (don it in projects, not on personal repo). In addition to the unit testing the pipeline also performs linting and black format check.
+- Workflows: very basic workflow example to put dependencies in place for key checks.
 
 
 ## Approach
