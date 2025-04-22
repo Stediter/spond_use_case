@@ -50,8 +50,8 @@ def check_data_quality_foreign_keys(input_df:DataFrame,check_list:list) -> (Data
     bad_formed_df = input_df.limit(0)
     for element in check_list:
         element["cross_check_table"] = element["cross_check_table"].withColumnRenamed(element["cross_check_primary_key_column"], element["foreign_key_column"]).select(element["foreign_key_column"])
-        input_df = input_df.join(element["cross_check_table"], how="inner", on=element["foreign_key_column"])
         element_bad_formed = input_df.join(element["cross_check_table"], how="left_anti", on=element["foreign_key_column"])
+        input_df = input_df.join(element["cross_check_table"], how="inner", on=element["foreign_key_column"])
         bad_formed_df = bad_formed_df.union(element_bad_formed)
 
     return input_df, bad_formed_df
